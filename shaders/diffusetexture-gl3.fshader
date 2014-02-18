@@ -20,25 +20,5 @@ void main() {
   float diffuse = max(0.0, dot(normal, tolight));
   vec3 intensity =  uColor * diffuse;
 
-
-
   fragColor = 0.5 * fragColor + 0.5 * vec4(intensity, 1.0);
 }
-
-
-
-/*
-#version 130
-
-// TODO: Make this shader use textures and diffuse lighting
-
-uniform vec3 uColor;
-
-in vec2 vTexCoord0;
-
-out vec4 fragColor;
-
-void main() {
-  fragColor = vec4(uColor, 1.0);
-}
-*/
