@@ -321,6 +321,33 @@ static void drawScene() {
   safe_glUniform1i(curSS.h_drawSun, 0);
   g_cube->draw(curSS);
 
+  double a = eyeLight[0];
+  double b = eyeLight[1];
+  double c = eyeLight[2];
+
+  Matrix4 S;
+  S(0, 0) = b;
+  S(0, 1) = -1 * a;
+  S(2, 1) = -1 * c;
+  S(2, 2) = b;
+  S(3, 1) = -1;
+  S(3, 3) = b;
+
+  Cvec3 transVec;
+  transVec[0] = a;
+  transVec[1] = 0;
+  transVec[2] = c;
+  
+  MVM = S * g_objectRbt;
+
+  MVM(1, 3) = 0;
+
+  sendModelViewNormalMatrix(curSS, MVM, MVM);
+  safe_glUniform3f(curSS.h_uColor, 0.0, 0.0, 0.0);
+  safe_glUniform1i(curSS.h_uTexUnit0, 3); // texture unit 1 for cube
+  safe_glUniform1i(curSS.h_drawSun, 1);
+  g_cube->draw(curSS);
+
   // TODO: draw more blocks
   MVM = invEyeRbt * g_objectRbt.makeTranslation(Cvec3(1.5, 1.0, 0)) * g_objectRbt;  
   NMVM = normalMatrix(MVM);
