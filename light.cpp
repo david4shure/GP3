@@ -306,6 +306,35 @@ static void drawScene() {
   g_cube->draw(curSS);
 
   // TODO: draw more blocks
+  MVM = invEyeRbt * g_objectRbt.makeTranslation(Cvec3(1.5, 1.0, 0)) * g_objectRbt;  
+  NMVM = normalMatrix(MVM);
+  sendModelViewNormalMatrix(curSS, MVM, NMVM);
+  safe_glUniform3f(curSS.h_uColor, 0.0, 1.0, 0.0);
+  safe_glUniform1i(curSS.h_uTexUnit0, 1); // texture unit 1 for cube
+  g_cube->draw(curSS);
+
+  MVM = invEyeRbt * g_objectRbt.makeTranslation(Cvec3(-1.5, 1.0, 0)) * g_objectRbt;
+  NMVM = normalMatrix(MVM);
+  sendModelViewNormalMatrix(curSS, MVM, NMVM);
+  safe_glUniform3f(curSS.h_uColor, 0.0, 0.0, 1.0);
+  safe_glUniform1i(curSS.h_uTexUnit0, 1); // texture unit 1 for cube
+  g_cube->draw(curSS);
+
+  MVM = invEyeRbt * g_objectRbt.makeTranslation(Cvec3(0, 3.0, 0)) * g_objectRbt.makeScale(Cvec3(0.5, 0.5, 0.5)) * g_objectRbt;
+  NMVM = normalMatrix(MVM);
+  sendModelViewNormalMatrix(curSS, MVM, NMVM);
+  safe_glUniform3f(curSS.h_uColor, 1.0, 0.0, 1.0);
+  safe_glUniform1i(curSS.h_uTexUnit0, 1); // texture unit 1 for cube
+  g_cube->draw(curSS);
+
+  MVM = invEyeRbt * g_objectRbt.makeTranslation(Cvec3(0, 4, -4)) * g_objectRbt.makeYRotation(.7854, .7854) * g_objectRbt;
+  NMVM = normalMatrix(MVM);
+  sendModelViewNormalMatrix(curSS, MVM, NMVM);
+  safe_glUniform3f(curSS.h_uColor, 0.0, 0.0, 1.0);
+  safe_glUniform1i(curSS.h_uTexUnit0, 1); // texture unit 1 for cube
+  g_cube->draw(curSS);
+
+
 
   // TODO: draw their shadows
   
