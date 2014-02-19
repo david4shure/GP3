@@ -53,6 +53,7 @@ using namespace tr1; // for shared_ptr
 // loaded
 // ----------------------------------------------------------------------------
 static const bool g_Gl2Compatible = false;
+static bool moving_sun = false;
 
 static float g_frustMinFov = 60.0;        // Show at least 60 degree field of view
 static float g_frustFovY = g_frustMinFov; // FOV in y direction (updated by updateFrustFovY)
@@ -206,7 +207,7 @@ struct Geometry {
 };
 
 // Vertex buffer and index buffer associated with the ground and cube geometry
-static shared_ptr<Geometry> g_ground, g_cube;
+static shared_ptr<Geometry> g_ground, g_cube, g_sphere;
 
 // --------- Scene
 
@@ -241,6 +242,17 @@ static void initCubes() {
 }
 
 // TODO: add a function for the sphere (sun) geometry
+static void initSphere() {
+  int ibLen, vbLen;
+  getSphereVbIbLen(24, 12, vbLen, ibLen);
+
+  vector<VertexPNX> vtx(vbLen);
+  vector<unsigned short> idx(ibLen);
+  
+  makeSphere(0.5, 24, 12, vtx.begin(), idx.begin());
+  g_sphere.reset(new Geometry(&vtx[0], &idx[0], vbLen, ibLen));
+}
+
 
 // takes a projection matrix and send to the the shaders
 static void sendProjectionMatrix(const ShaderState& SS, const Matrix4& projMatrix) {
@@ -312,7 +324,7 @@ static void drawScene() {
   safe_glUniform3f(curSS.h_uColor, 0.0, 1.0, 0.0);
   safe_glUniform1i(curSS.h_uTexUnit0, 1); // texture unit 1 for cube
   g_cube->draw(curSS);
-
+  
   MVM = invEyeRbt * g_objectRbt.makeTranslation(Cvec3(-1.5, 1.0, 0)) * g_objectRbt;
   NMVM = normalMatrix(MVM);
   sendModelViewNormalMatrix(curSS, MVM, NMVM);
@@ -338,7 +350,14 @@ static void drawScene() {
 
   // TODO: draw their shadows
   
+  
   // TODO: draw a sun
+  MVM = invEyeRbt * g_lightRbt;
+  NMVM = normalMatrix(MVM);
+  sendModelViewNormalMatrix(curSS, MVM, NMVM);
+  safe_glUniform3f(curSS.h_uColor, 0.9, 1.0, 0.0);
+  safe_glUniform1i(curSS.h_uTexUnit0, 3); // texture unit 1 for cube
+  g_sphere->draw(curSS);
 
 }
 
@@ -374,9 +393,16 @@ static void motion(const int x, const int y) {
   }
 
   if (g_mouseClickDown) {
-	  a =  transFact(g_objectRbt)*linFact(g_eyeRbt);
-	  g_objectRbt = a * m * inv(a) * g_objectRbt;
-	  glutPostRedisplay(); // we always redraw if we changed the scene
+    if (!moving_sun) {
+      a =  transFact(g_objectRbt)*linFact(g_eyeRbt);
+      g_objectRbt = a * m * inv(a) * g_objectRbt;
+      glutPostRedisplay(); // we always redraw if we changed the scene
+    }
+    else {
+      a = transFact(g_lightRbt) * linFact(g_eyeRbt);
+      g_lightRbt = a * m * inv(a) * g_lightRbt;
+      glutPostRedisplay();
+    }
   }
 
   g_mouseClickX = x;
@@ -439,6 +465,8 @@ static void keyboard(const unsigned char key, const int x, const int y) {
 		  break;
     }
     break;
+  case 'o':
+    moving_sun = !moving_sun;
   }
   glutPostRedisplay();
 }
@@ -485,6 +513,7 @@ static void initShaders() {
 static void initGeometry() {
   initGround();
   initCubes();
+  initSphere();
 }
 
 static void loadTexture(GLuint texHandle, const char *ppmFilename) {
