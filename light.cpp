@@ -85,6 +85,7 @@ struct ShaderState {
   GLint h_aPosition;
   GLint h_aNormal;
   GLint h_aTexCoord0;
+  GLint h_drawSun;
 
   ShaderState(const char* vsfn, const char* fsfn) {
     readAndCompileShader(program, vsfn, fsfn);
@@ -98,6 +99,7 @@ struct ShaderState {
     h_uNormalMatrix = safe_glGetUniformLocation(h, "uNormalMatrix");
     h_uColor = safe_glGetUniformLocation(h, "uColor");
     h_uTexUnit0 = safe_glGetUniformLocation(h, "uTexUnit0"); // textures
+    h_drawSun = safe_glGetUniformLocation(h, "drawSun");
 
     // Retrieve handles to vertex attributes
     h_aPosition = safe_glGetAttribLocation(h, "aPosition");
@@ -306,6 +308,7 @@ static void drawScene() {
   sendModelViewNormalMatrix(curSS, MVM, NMVM);
   safe_glUniform3f(curSS.h_uColor, 0.1, 0.95, 0.1); // set color
   safe_glUniform1i(curSS.h_uTexUnit0, 0); // texture unit 0 for ground
+  safe_glUniform1i(curSS.h_drawSun, 0);
   g_ground->draw(curSS);
 
   // draw blocks
@@ -315,6 +318,7 @@ static void drawScene() {
   sendModelViewNormalMatrix(curSS, MVM, NMVM);
   safe_glUniform3f(curSS.h_uColor, 1.0, 0.0, 0.0);
   safe_glUniform1i(curSS.h_uTexUnit0, 1); // texture unit 1 for cube
+  safe_glUniform1i(curSS.h_drawSun, 0);
   g_cube->draw(curSS);
 
   // TODO: draw more blocks
@@ -323,6 +327,7 @@ static void drawScene() {
   sendModelViewNormalMatrix(curSS, MVM, NMVM);
   safe_glUniform3f(curSS.h_uColor, 0.0, 1.0, 0.0);
   safe_glUniform1i(curSS.h_uTexUnit0, 1); // texture unit 1 for cube
+  safe_glUniform1i(curSS.h_drawSun, 0);
   g_cube->draw(curSS);
   
   MVM = invEyeRbt * g_objectRbt.makeTranslation(Cvec3(-1.5, 1.0, 0)) * g_objectRbt;
@@ -330,6 +335,7 @@ static void drawScene() {
   sendModelViewNormalMatrix(curSS, MVM, NMVM);
   safe_glUniform3f(curSS.h_uColor, 0.0, 0.0, 1.0);
   safe_glUniform1i(curSS.h_uTexUnit0, 1); // texture unit 1 for cube
+  safe_glUniform1i(curSS.h_drawSun, 0);
   g_cube->draw(curSS);
 
   MVM = invEyeRbt * g_objectRbt.makeTranslation(Cvec3(0, 3.0, 0)) * g_objectRbt.makeScale(Cvec3(0.5, 0.5, 0.5)) * g_objectRbt;
@@ -337,6 +343,7 @@ static void drawScene() {
   sendModelViewNormalMatrix(curSS, MVM, NMVM);
   safe_glUniform3f(curSS.h_uColor, 1.0, 0.0, 1.0);
   safe_glUniform1i(curSS.h_uTexUnit0, 1); // texture unit 1 for cube
+  safe_glUniform1i(curSS.h_drawSun, 0);
   g_cube->draw(curSS);
 
   MVM = invEyeRbt * g_objectRbt.makeTranslation(Cvec3(0, 4, -4)) * g_objectRbt.makeYRotation(.7854, .7854) * g_objectRbt;
@@ -344,6 +351,7 @@ static void drawScene() {
   sendModelViewNormalMatrix(curSS, MVM, NMVM);
   safe_glUniform3f(curSS.h_uColor, 0.0, 0.0, 1.0);
   safe_glUniform1i(curSS.h_uTexUnit0, 1); // texture unit 1 for cube
+  safe_glUniform1i(curSS.h_drawSun, 0);
   g_cube->draw(curSS);
 
 
@@ -357,6 +365,7 @@ static void drawScene() {
   sendModelViewNormalMatrix(curSS, MVM, NMVM);
   safe_glUniform3f(curSS.h_uColor, 0.9, 1.0, 0.0);
   safe_glUniform1i(curSS.h_uTexUnit0, 3); // texture unit 1 for cube
+  safe_glUniform1i(curSS.h_drawSun, 1);
   g_sphere->draw(curSS);
 
 }
