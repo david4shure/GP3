@@ -85,7 +85,7 @@ struct ShaderState {
   GLint h_aPosition;
   GLint h_aNormal;
   GLint h_aTexCoord0;
-  GLint h_drawSun;
+  GLint h_solid_color;
 
   ShaderState(const char* vsfn, const char* fsfn) {
     readAndCompileShader(program, vsfn, fsfn);
@@ -99,7 +99,7 @@ struct ShaderState {
     h_uNormalMatrix = safe_glGetUniformLocation(h, "uNormalMatrix");
     h_uColor = safe_glGetUniformLocation(h, "uColor");
     h_uTexUnit0 = safe_glGetUniformLocation(h, "uTexUnit0"); // textures
-    h_drawSun = safe_glGetUniformLocation(h, "drawSun");
+    h_solid_color = safe_glGetUniformLocation(h, "solid_color");
 
     // Retrieve handles to vertex attributes
     h_aPosition = safe_glGetAttribLocation(h, "aPosition");
@@ -308,7 +308,7 @@ static void drawScene() {
   sendModelViewNormalMatrix(curSS, MVM, NMVM);
   safe_glUniform3f(curSS.h_uColor, 0.1, 0.95, 0.1); // set color
   safe_glUniform1i(curSS.h_uTexUnit0, 0); // texture unit 0 for ground
-  safe_glUniform1i(curSS.h_drawSun, 0);
+  safe_glUniform1i(curSS.h_solid_color, 0);
   g_ground->draw(curSS);
 
   // draw blocks
@@ -318,14 +318,15 @@ static void drawScene() {
   sendModelViewNormalMatrix(curSS, MVM, NMVM);
   safe_glUniform3f(curSS.h_uColor, 1.0, 0.0, 0.0);
   safe_glUniform1i(curSS.h_uTexUnit0, 1); // texture unit 1 for cube
-  safe_glUniform1i(curSS.h_drawSun, 0);
+  safe_glUniform1i(curSS.h_solid_color, 0);
   g_cube->draw(curSS);
 
-  double a = eyeLight[0];
-  double b = eyeLight[1];
-  double c = eyeLight[2];
+  double a = g_lightRbt(0, 3);
+  double b = g_lightRbt(1, 3);
+  double c = g_lightRbt(2, 3);
 
-  Matrix4 S;
+  Matrix4 S = Matrix4(0.1);
+
   S(0, 0) = b;
   S(0, 1) = -1 * a;
   S(2, 1) = -1 * c;
@@ -333,55 +334,90 @@ static void drawScene() {
   S(3, 1) = -1;
   S(3, 3) = b;
 
-  Cvec3 transVec;
-  transVec[0] = a;
-  transVec[1] = 0;
-  transVec[2] = c;
-  
-  MVM = S * g_objectRbt;
-
-  MVM(1, 3) = 0;
+  MVM = invEyeRbt * S * g_objectRbt;
 
   sendModelViewNormalMatrix(curSS, MVM, MVM);
   safe_glUniform3f(curSS.h_uColor, 0.0, 0.0, 0.0);
-  safe_glUniform1i(curSS.h_uTexUnit0, 3); // texture unit 1 for cube
-  safe_glUniform1i(curSS.h_drawSun, 1);
+  safe_glUniform1i(curSS.h_uTexUnit0, 1); // texture unit 1 for cube
+  safe_glUniform1i(curSS.h_solid_color, 4);
   g_cube->draw(curSS);
 
   // TODO: draw more blocks
-  MVM = invEyeRbt * g_objectRbt.makeTranslation(Cvec3(1.5, 1.0, 0)) * g_objectRbt;  
+
+  double x1 = -2, y1 = 1, z1 = 0;
+
+  MVM = invEyeRbt * g_objectRbt.makeTranslation(Cvec3(x1, y1, z1)) * g_objectRbt;  
   NMVM = normalMatrix(MVM);
   sendModelViewNormalMatrix(curSS, MVM, NMVM);
   safe_glUniform3f(curSS.h_uColor, 0.0, 1.0, 0.0);
   safe_glUniform1i(curSS.h_uTexUnit0, 1); // texture unit 1 for cube
-  safe_glUniform1i(curSS.h_drawSun, 0);
+  safe_glUniform1i(curSS.h_solid_color, 0);
   g_cube->draw(curSS);
-  
-  MVM = invEyeRbt * g_objectRbt.makeTranslation(Cvec3(-1.5, 1.0, 0)) * g_objectRbt;
+
+
+  // SHADOW
+  MVM = invEyeRbt * S * g_objectRbt.makeTranslation(Cvec3(x1, y1, z1)) * g_objectRbt;  
+  sendModelViewNormalMatrix(curSS, MVM, MVM);
+  safe_glUniform3f(curSS.h_uColor, 0.0, 0.0, 0.0);
+  safe_glUniform1i(curSS.h_uTexUnit0, 1); // texture unit 1 for cube
+  safe_glUniform1i(curSS.h_solid_color, 4);
+  g_cube->draw(curSS);
+
+  double x2 = 2, y2 = 1, z2 = 0;
+
+  MVM = invEyeRbt * g_objectRbt.makeTranslation(Cvec3(x2, y2, z2)) * g_objectRbt;
   NMVM = normalMatrix(MVM);
   sendModelViewNormalMatrix(curSS, MVM, NMVM);
   safe_glUniform3f(curSS.h_uColor, 0.0, 0.0, 1.0);
   safe_glUniform1i(curSS.h_uTexUnit0, 1); // texture unit 1 for cube
-  safe_glUniform1i(curSS.h_drawSun, 0);
+  safe_glUniform1i(curSS.h_solid_color, 0);
   g_cube->draw(curSS);
 
-  MVM = invEyeRbt * g_objectRbt.makeTranslation(Cvec3(0, 3.0, 0)) * g_objectRbt.makeScale(Cvec3(0.5, 0.5, 0.5)) * g_objectRbt;
+
+  // SHADOW
+  MVM = invEyeRbt * S * g_objectRbt.makeTranslation(Cvec3(x2, y2, z2)) * g_objectRbt;
+  sendModelViewNormalMatrix(curSS, MVM, MVM);
+  safe_glUniform3f(curSS.h_uColor, 0.0, 0.0, .0);
+  safe_glUniform1i(curSS.h_uTexUnit0, 1); // texture unit 1 for cube
+  safe_glUniform1i(curSS.h_solid_color, 4);
+  g_cube->draw(curSS);
+
+  double x3 = 2, y3 = 1, z3 = -3;
+
+  MVM = invEyeRbt * g_objectRbt.makeTranslation(Cvec3(x3, y3, z3)) * g_objectRbt.makeScale(Cvec3(0.5, 0.5, 0.5)) * g_objectRbt;
   NMVM = normalMatrix(MVM);
   sendModelViewNormalMatrix(curSS, MVM, NMVM);
   safe_glUniform3f(curSS.h_uColor, 1.0, 0.0, 1.0);
   safe_glUniform1i(curSS.h_uTexUnit0, 1); // texture unit 1 for cube
-  safe_glUniform1i(curSS.h_drawSun, 0);
+  safe_glUniform1i(curSS.h_solid_color, 0);
   g_cube->draw(curSS);
 
-  MVM = invEyeRbt * g_objectRbt.makeTranslation(Cvec3(0, 4, -4)) * g_objectRbt.makeYRotation(.7854, .7854) * g_objectRbt;
+
+  // SHADOW
+  MVM = invEyeRbt * S * g_objectRbt.makeTranslation(Cvec3(x3, y3, z3)) * g_objectRbt.makeScale(Cvec3(0.5, 0.5, 0.5)) * g_objectRbt;
+  sendModelViewNormalMatrix(curSS, MVM, MVM);
+  safe_glUniform3f(curSS.h_uColor, 0.0, 0.0, 0.0);
+  safe_glUniform1i(curSS.h_uTexUnit0, 1); // texture unit 1 for cube
+  safe_glUniform1i(curSS.h_solid_color, 4);
+  g_cube->draw(curSS);
+
+  double x4 = -2, y4 = 4, z4 = 0.5;
+
+  MVM = invEyeRbt * g_objectRbt.makeTranslation(Cvec3(x4, y4, z4)) * g_objectRbt.makeYRotation(.7854, .7854) * g_objectRbt;
   NMVM = normalMatrix(MVM);
   sendModelViewNormalMatrix(curSS, MVM, NMVM);
   safe_glUniform3f(curSS.h_uColor, 0.0, 0.0, 1.0);
   safe_glUniform1i(curSS.h_uTexUnit0, 1); // texture unit 1 for cube
-  safe_glUniform1i(curSS.h_drawSun, 0);
+  safe_glUniform1i(curSS.h_solid_color, 0);
   g_cube->draw(curSS);
 
-
+  // SHADOW
+  MVM = invEyeRbt * S * g_objectRbt.makeTranslation(Cvec3(x4, y4, z4)) * g_objectRbt.makeYRotation(.7854, .7854) * g_objectRbt;
+  sendModelViewNormalMatrix(curSS, MVM, MVM);
+  safe_glUniform3f(curSS.h_uColor, 0.0, 0.0, 0.0);
+  safe_glUniform1i(curSS.h_uTexUnit0, 1); // texture unit 1 for cube
+  safe_glUniform1i(curSS.h_solid_color, 4);
+  g_cube->draw(curSS);
 
   // TODO: draw their shadows
   
@@ -392,7 +428,7 @@ static void drawScene() {
   sendModelViewNormalMatrix(curSS, MVM, NMVM);
   safe_glUniform3f(curSS.h_uColor, 0.9, 1.0, 0.0);
   safe_glUniform1i(curSS.h_uTexUnit0, 3); // texture unit 1 for cube
-  safe_glUniform1i(curSS.h_drawSun, 1);
+  safe_glUniform1i(curSS.h_solid_color, 1);
   g_sphere->draw(curSS);
 
 }
