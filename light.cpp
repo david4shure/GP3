@@ -69,6 +69,7 @@ static bool g_mouseClickDown = false;    // is the mouse button pressed
 static bool g_mouseLClickButton, g_mouseRClickButton, g_mouseMClickButton;
 static int g_mouseClickX, g_mouseClickY; // coordinates for mouse click event
 static int g_activeShader = 0;
+static float zoomLevel = 1;
 
 struct ShaderState {
   GlProgram program;
@@ -285,7 +286,7 @@ static void updateFrustFovY() {
 
 static Matrix4 makeProjectionMatrix() {
   return Matrix4::makeProjection(
-           g_frustFovY, g_windowWidth / static_cast <double> (g_windowHeight),
+           g_frustFovY / zoomLevel, g_windowWidth / static_cast <double> (g_windowHeight),
            g_frustNear, g_frustFar);
 }
 
@@ -539,6 +540,13 @@ static void keyboard(const unsigned char key, const int x, const int y) {
     break;
   case 'o':
     moving_sun = !moving_sun;
+    break;
+  case '+':
+    zoomLevel += 0.1;
+    break;
+  case '-':
+    zoomLevel -= 0.1;
+    break;
   }
   glutPostRedisplay();
 }
